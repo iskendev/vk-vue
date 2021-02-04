@@ -1,26 +1,25 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
-import ExternalApiView from "../views/ExternalApi.vue"
+import Feed from '../views/Feed.vue'
 import { authGuard } from "../auth/authGuard"
 
 Vue.use(VueRouter)
 
 const routes = [
+  // {
+  //   path: '/',
+  //   name: 'Home',
+  //   component: Home
+  // },
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    name: 'Login',
+    component: () => import('../views/Login.vue')
   },
   {
-    path: '/home',
-    name: 'About',
-    component: () => import('../views/About.vue')
-  },
-  {
-    path: "/external-api",
-    name: "external-api",
-    component: ExternalApiView,
+    path: "/feed",
+    name: "Feed",
+    component: Feed,
     beforeEnter: authGuard
   }
 ]
