@@ -1,14 +1,11 @@
 <template>
   <div>
-    <span>{{ item.label }}</span>
+    <span>{{ item.name }}</span>
   </div>
 </template>
 
 <script>
 export default {
-  props: {
-    item: { required: true },
-    searchText: { required: true }
-  }
+  props: ['item']
 }
 </script>

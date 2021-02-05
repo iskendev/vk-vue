@@ -1,73 +1,50 @@
 <template>
   <div class="feed">
-    <feed-header />
+    <feed-header @setPosts="setPosts" @sortBy="sortBy" />
+    <feed-body v-if="payload" :payload="payload"/>
   </div>
 </template>
 
 <script>
-import axios from "axios";
-import FeedHeader from '../components/FeedHeader.vue';
+import FeedHeader from '../components/FeedHeader.vue'
+import FeedBody from '../components/FeedBody.vue'
 
 export default {
-  components: { FeedHeader },
+  components: {
+    FeedHeader,
+    FeedBody
+  },
   name: "Feed",
   data() {
     return {
-      apiMessage: ""
+      payload: null,
     };
   },
   methods: {
-    async callApi() {
-      // Get the access token from the auth wrapper
-      // const token = await this.$auth.getTokenSilently();
-
-      console.log(VK);
-
-      VK.init({
-        apiId: 7749448
-      });
-
-      let options = {
-        v: '5.126',
-        q: 'الإسلام',
-        // user_id: '165681341',
-        // extended: 1,
-        // filter: 'groups, publics',
-        // fields: 'description',
-        // count: '10'
-        // access_token: token,
-        sort: 2
-
-
-      }
-
-      VK.Api.call('groups.search', options, function(r) {
-        // if(r) {
-          console.log(r);
-        // alert(r.response[0].bdate);
-        // }
-      });
-    },
     login() {
-       this.$auth.loginWithRedirect();
-      // console.log(res, 'res');
-      // const token = await this.$auth.getTokenSilently();
-      // const { data } = await axios.get("https://api.vk.com/method/groups.get?v=5.52", {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`    // send the access token through the 'Authorization' header
-      //   }
-      // });
-
-      // console.log(data, 'data');
-
-
+      this.$auth.loginWithRedirect();
     },
     logout() {
       this.$auth.logout({
         returnTo: window.location.origin
       });
     },
-
+    setPosts(payload) {
+      this.payload = payload
+      console.log(this.payload);
+    },
+    sortBy(param) {
+      if (this.payload) {
+        this.payload.posts.sort((a, b) => {
+          if (param === 'dates') {
+            const first = new Date(a.date * 1000)
+            const second = new Date(b.date * 1000)
+            return new Date(second) - new Date(first)
+          }
+          return b[param].count - a[param].count
+        });
+      }
+    }
   }
 };
 </script>
@@ -80,7 +57,7 @@ export default {
 
     &__header {
       margin-top: 50px;
-      padding: 0 15px;
+      padding: 0 15px 15px 15px;
       border: 1px solid #ccc;
 
       &--top {
@@ -96,6 +73,44 @@ export default {
 
         .v-autocomplete {
           margin-top: 10px;
+
+          .v-autocomplete-input-group {
+            .v-autocomplete-input {
+              font-size: 14px;
+              padding: 5px;
+              box-shadow: none;
+              border: 1px solid #848F94;
+              width: 250px;
+              outline: none;
+            }
+          }
+
+          .v-autocomplete-list {
+            width: 100%;
+            text-align: left;
+            border: none;
+            border-top: none;
+            max-height: 400px;
+            overflow-y: auto;
+            border-bottom: 1px solid #848F94;
+
+            .v-autocomplete-list-item {
+              cursor: pointer;
+              background-color: #fff;
+              padding: 5px 10px;
+              border-bottom: 1px solid #848F94;
+              border-left: 1px solid #848F94;
+              border-right: 1px solid #848F94;
+
+              &:last-child {
+                border-bottom: none;
+              }
+
+              &:hover {
+                background-color: #eee;
+              }
+            }
+          }
         }
       }
 
@@ -117,6 +132,10 @@ export default {
         }
       }
 
+      .active {
+        color: #FA3B69;;
+      }
+
       .feed__header--icons {
         margin-top: 20px;
 
@@ -129,6 +148,64 @@ export default {
           &:hover {
             border-color: #FA3B69;
           }
+        }
+      }
+    }
+
+    &__body {
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px solid #ccc;
+      max-height: 600px;
+      overflow: auto;
+
+      &--wrapper {
+        padding: 15px;
+        border: 1px solid #eee;
+        margin-bottom: 30px;
+
+        strong { font-size: 14px; }
+
+        p {
+          margin-bottom: 0;
+          white-space: pre-wrap;
+        }
+      }
+
+      &--title {
+        display: flex;
+
+        img {
+          border-radius: 50%;
+        }
+
+        div {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          margin-left: 15px;
+
+          p { margin: 0; padding: 0; }
+        }
+      }
+
+      &--attachments {
+
+        .attachments-pics {
+          margin-top: 15px;
+
+          img {
+            width: 100%;
+          }
+        }
+      }
+
+      &--info {
+        display: flex;
+        justify-content: space-between;
+
+        div {
+          strong { margin-left: 15px; }
         }
       }
     }
