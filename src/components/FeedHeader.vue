@@ -8,8 +8,10 @@
         :component-item='template'
         @change="updateGroups"
         :get-label="setPosts"
+        placeholder="Поиск"
       >
       </v-autocomplete>
+      <button @click="logout">Выйти</button>
     </div>
     <hr>
     <ul>
@@ -20,9 +22,12 @@
       </li>
     </ul>
     <ul class="feed__header--icons">
-      <li><font-awesome-icon icon="camera" /></li>
-      <li><font-awesome-icon icon="link" /></li>
-      <li><font-awesome-icon icon="video" /></li>
+      <li v-for="(element, i) in filterableElements"
+        :key="i" @click="filterBy(element.param, i)"
+        :class="{ active: element.isActive }">
+        <font-awesome-icon :icon="element.icon" />
+      </li>
+      <li v-if="loading" class="loading">Подождите ...</li>
     </ul>
   </div>
 </template>
@@ -36,16 +41,27 @@ export default {
     groups: [],
     template: ItemTemplate,
     token: '',
+    loading: false,
     sortableElements: [
       { title: 'Лайки', param: 'likes', isActive: false },
       { title: 'Репосты', param: 'reposts', isActive: false },
       { title: 'Комментарии', param: 'comments', isActive: false },
       { title: 'Дата', param: 'dates', isActive: true },
+    ],
+    filterableElements: [
+      { param: 'photo', icon: 'camera', isActive: false },
+      { param: 'copy_history', icon: 'link', isActive: false },
+      { param: 'video', icon: 'video', isActive: false },
+      { param: 'text', icon: 'font', isActive: false },
+      { param: 'reset', icon: 'backspace', isActive: true },
     ]
   }),
   methods: {
     setPosts(item) {
-      console.log(item);
+      this.loading = true
+      this.setActiveElement('sortable', 3)
+      this.setActiveElement('filterable', 4)
+
       const options = {
         v: '5.126',
         owner_id: -item.id,
@@ -57,10 +73,12 @@ export default {
         if (res.response.items) {
           const payload = {
             name: item.name,
+            id: -item.id,
             pic: item.photo_50,
-            posts: res.response.items
+            posts: res.response.items,
           }
           this.$emit('setPosts', payload)
+          this.loading = false
         }
       });
 
@@ -95,10 +113,22 @@ export default {
         }
       });
     },
+    setActiveElement(type, i) {
+      this[`${type}Elements`].forEach(element => element.isActive = false)
+      this[`${type}Elements`][i].isActive = true
+    },
     sortBy(param, i) {
-      this.sortableElements.forEach(element => element.isActive = false)
-      this.sortableElements[i].isActive = true
+      this.setActiveElement('sortable', i)
       this.$emit('sortBy', param)
+    },
+    filterBy(param, i) {
+      this.setActiveElement('filterable', i)
+      this.$emit('filterBy', param)
+    },
+    logout() {
+      this.$auth.logout({
+        returnTo: window.location.origin
+      });
     }
   },
   created() {

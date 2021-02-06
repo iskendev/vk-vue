@@ -1,6 +1,7 @@
 <template>
   <div class="feed">
-    <feed-header @setPosts="setPosts" @sortBy="sortBy" />
+    <feed-header @setPosts="setPosts"
+      @sortBy="sortBy" @filterBy="filterBy"/>
     <feed-body v-if="payload" :payload="payload"/>
   </div>
 </template>
@@ -17,197 +18,96 @@ export default {
   name: "Feed",
   data() {
     return {
-      payload: null,
+      payload: null
     };
   },
   methods: {
-    login() {
-      this.$auth.loginWithRedirect();
-    },
-    logout() {
-      this.$auth.logout({
-        returnTo: window.location.origin
-      });
-    },
     setPosts(payload) {
       this.payload = payload
-      console.log(this.payload);
     },
     sortBy(param) {
       if (this.payload) {
         this.payload.posts.sort((a, b) => {
-          if (param === 'dates') {
-            const first = new Date(a.date * 1000)
-            const second = new Date(b.date * 1000)
-            return new Date(second) - new Date(first)
-          }
-          return b[param].count - a[param].count
+          return param === 'dates' ?
+            this.sortByDates(a.date, b.date) :
+              b[param].count - a[param].count
         });
       }
+    },
+    sortByDates(a, b) {
+      const first = new Date(a * 1000)
+      const second = new Date(b * 1000)
+      return new Date(second) - new Date(first)
+    },
+    filterBy(param) {
+      switch (param) {
+        case 'photo': {
+          this.fetchPosts().then(posts => {
+            this.filterByPhotosVideos(posts, param)
+          })
+        }
+        break
+
+        case 'video': {
+          this.fetchPosts().then(posts => {
+            this.filterByPhotosVideos(posts, param)
+          })
+        }
+        break
+
+        case 'copy_history': {
+          this.fetchPosts().then(posts => {
+            this.filterByReposts(posts)
+          })
+        }
+        break
+
+
+        case 'text': {
+          this.fetchPosts().then(posts => {
+            this.filterByTextOnly(posts)
+          })
+        }
+        break
+
+        case 'reset': {
+          this.fetchPosts().then(posts => {
+            this.payload.posts = posts
+          })
+        }
+        break
+      }
+    },
+    fetchPosts() {
+      const promise = new Promise((resolve, reject) => {
+        const options = {
+          v: '5.126',
+          owner_id: this.payload.id,
+          count: '100',
+          extended: '1',
+        }
+        VK.Api.call('wall.get', options, (result) => {
+          if (result.response.items) {
+            resolve(result.response.items)
+          }
+        })
+      })
+      return promise
+    },
+    filterByPhotosVideos(posts, attachmentType) {
+      posts = posts.filter(post => post.attachments)
+      posts = posts.filter(post => post.attachments = post.attachments.filter(attch => attch.type === attachmentType))
+      posts = posts.filter(post => post.attachments.length)
+      this.payload.posts = posts
+    },
+    filterByReposts(posts) {
+      this.payload.posts = posts.filter(post => post.copy_history)
+    },
+    filterByTextOnly(posts) {
+      posts = posts.filter(post => !post.attachments)
+      posts = posts.filter(post => !post.copy_history)
+      this.payload.posts = posts
     }
   }
 };
 </script>
-
-<style lang="scss">
-  .feed {
-    width: 40%;
-    margin: 0 auto;
-    color: #848F94;
-
-    &__header {
-      margin-top: 50px;
-      padding: 0 15px 15px 15px;
-      border: 1px solid #ccc;
-
-      &--top {
-        margin: 15px 0;
-        display: flex;
-        justify-content: space-between;
-
-        h1 {
-          color: #6D726C;
-          margin: 0;
-          padding: 0;
-        }
-
-        .v-autocomplete {
-          margin-top: 10px;
-
-          .v-autocomplete-input-group {
-            .v-autocomplete-input {
-              font-size: 14px;
-              padding: 5px;
-              box-shadow: none;
-              border: 1px solid #848F94;
-              width: 250px;
-              outline: none;
-            }
-          }
-
-          .v-autocomplete-list {
-            width: 100%;
-            text-align: left;
-            border: none;
-            border-top: none;
-            max-height: 400px;
-            overflow-y: auto;
-            border-bottom: 1px solid #848F94;
-
-            .v-autocomplete-list-item {
-              cursor: pointer;
-              background-color: #fff;
-              padding: 5px 10px;
-              border-bottom: 1px solid #848F94;
-              border-left: 1px solid #848F94;
-              border-right: 1px solid #848F94;
-
-              &:last-child {
-                border-bottom: none;
-              }
-
-              &:hover {
-                background-color: #eee;
-              }
-            }
-          }
-        }
-      }
-
-      ul {
-        padding: 0;
-        margin: 0;
-        list-style: none;
-        display: flex;
-
-        li {
-          margin-right: 30px;
-          font-weight: bold;
-          cursor: pointer;
-          font-size: 15px;
-
-          &:hover {
-            color: #FA3B69;
-          }
-        }
-      }
-
-      .active {
-        color: #FA3B69;;
-      }
-
-      .feed__header--icons {
-        margin-top: 20px;
-
-        li {
-          border: 1px solid #6D726C;
-          padding: 8px 10px;
-          border-radius: 50%;
-           margin-right: 20px;
-
-          &:hover {
-            border-color: #FA3B69;
-          }
-        }
-      }
-    }
-
-    &__body {
-      margin-top: 30px;
-      padding: 15px;
-      border: 1px solid #ccc;
-      max-height: 600px;
-      overflow: auto;
-
-      &--wrapper {
-        padding: 15px;
-        border: 1px solid #eee;
-        margin-bottom: 30px;
-
-        strong { font-size: 14px; }
-
-        p {
-          margin-bottom: 0;
-          white-space: pre-wrap;
-        }
-      }
-
-      &--title {
-        display: flex;
-
-        img {
-          border-radius: 50%;
-        }
-
-        div {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          margin-left: 15px;
-
-          p { margin: 0; padding: 0; }
-        }
-      }
-
-      &--attachments {
-
-        .attachments-pics {
-          margin-top: 15px;
-
-          img {
-            width: 100%;
-          }
-        }
-      }
-
-      &--info {
-        display: flex;
-        justify-content: space-between;
-
-        div {
-          strong { margin-left: 15px; }
-        }
-      }
-    }
-  }
-</style>

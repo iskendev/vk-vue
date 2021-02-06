@@ -6,11 +6,6 @@ import { authGuard } from "../auth/authGuard"
 Vue.use(VueRouter)
 
 const routes = [
-  // {
-  //   path: '/',
-  //   name: 'Home',
-  //   component: Home
-  // },
   {
     path: '/',
     name: 'Login',

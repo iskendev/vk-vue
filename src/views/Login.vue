@@ -1,9 +1,9 @@
 <template>
-  <div class="nav">
+  <div class="login">
       <template v-if="!$auth.loading">
-        <router-link to="/feed" class="nav-wrapper">
-          <font-awesome-icon class="nav__logo" :icon="['fab', 'vk']"  size="lg" :style="{ color: '#2c3e50' }" />
-          <span class="nav__login">{{ $auth.isAuthenticated ? 'Вы авторизованы' : 'Войти' }}</span>
+        <router-link to="/feed" class="login-wrapper">
+          <font-awesome-icon class="login__logo" :icon="['fab', 'vk']"  size="lg" :style="{ color: '#2c3e50' }" />
+          <span class="login__enter">{{ $auth.isAuthenticated ? 'Вы авторизованы' : 'Войти' }}</span>
         </router-link>
       </template>
       <template v-else>
@@ -11,6 +11,7 @@
       </template>
     </div>
 </template>
+
 <script>
   export default {
     name: 'Login'
